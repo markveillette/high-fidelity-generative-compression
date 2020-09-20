@@ -20,7 +20,8 @@ NUM_DATASET_WORKERS = 4
 SCALE_MIN = 0.75
 SCALE_MAX = 0.95
 DATASETS_DICT = {"openimages": "OpenImages", "cityscapes": "CityScapes", 
-                 "jetimages": "JetImages", "evaluation": "Evaluation"}
+                 "jetimages": "JetImages", "evaluation": "Evaluation",
+                 "sevir":"Sevir"}
 DATASETS = list(DATASETS_DICT.keys())
 
 def get_dataset(dataset):
@@ -329,3 +330,37 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
             img.crop((left, top, right, bottom))
 
         img.save(img_path, img_format)
+
+from torch.utils.data import TensorDataset
+import h5py
+class Sevir(TensorDataset):
+    def __init__(self,root,key='ir069',shuffle=True,img_min=-8000,img_max=0):
+        # Load all hdf5 files under root into memory (!)
+        if os.path.isdir(root):
+            files = glob.glob(os.path.join(root, '*.h5'))
+        else:
+            files=[root]
+        X=[]
+        for f in files:
+            print('Reading',f)
+            with h5py.File(f,'r') as hf:
+                X.append(hf[key][:])
+        X=np.concatenate(X,axis=0)
+        # unwrap time
+        X=np.transpose(X,(0,3,1,2))
+        X=np.reshape(X,(-1,1,X.shape[2],X.shape[3]))
+        # Normalize
+        X = (X-img_min)/(img_max-img_min)
+        self.ndim=X[0].shape
+        super().__init__(torch.Tensor(X),shuffle=shuffle)
+
+    def __ndim__(self):
+        return self.ndim
+        
+
+
+
+
+
+
+
