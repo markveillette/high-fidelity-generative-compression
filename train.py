@@ -271,6 +271,25 @@ if __name__ == '__main__':
     storage = defaultdict(list)
     storage_test = defaultdict(list)
     logger = utils.logger_setup(logpath=os.path.join(args.snapshot, 'logs'), filepath=os.path.abspath(__file__))
+    
+    test_loader = datasets.get_dataloaders(args.dataset,
+                                root=args.dataset_path,
+                                batch_size=args.batch_size,
+                                logger=logger,
+                                mode='validation',
+                                shuffle=True,
+                                normalize=args.normalize_input_image)
+
+    train_loader = datasets.get_dataloaders(args.dataset,
+                                root=args.dataset_path,
+                                batch_size=args.batch_size,
+                                logger=logger,
+                                mode='train',
+                                shuffle=True,
+                                normalize=args.normalize_input_image)
+
+    args.n_data = len(train_loader.dataset)
+    args.image_dims = train_loader.dataset.image_dims
 
     if args.warmstart is True:
         assert args.warmstart_ckpt is not None, 'Must provide checkpoint to previously trained AE/HP model.'
@@ -313,24 +332,7 @@ if __name__ == '__main__':
     logger.info('USING GPU ID {}'.format(args.gpu))
     logger.info('USING DATASET: {}'.format(args.dataset))
 
-    test_loader = datasets.get_dataloaders(args.dataset,
-                                root=args.dataset_path,
-                                batch_size=args.batch_size,
-                                logger=logger,
-                                mode='validation',
-                                shuffle=True,
-                                normalize=args.normalize_input_image)
-
-    train_loader = datasets.get_dataloaders(args.dataset,
-                                root=args.dataset_path,
-                                batch_size=args.batch_size,
-                                logger=logger,
-                                mode='train',
-                                shuffle=True,
-                                normalize=args.normalize_input_image)
-
-    args.n_data = len(train_loader.dataset)
-    args.image_dims = train_loader.dataset.image_dims
+    
     logger.info('Training elements: {}'.format(args.n_data))
     logger.info('Input Dimensions: {}'.format(args.image_dims))
     logger.info('Optimizers: {}'.format(optimizers))

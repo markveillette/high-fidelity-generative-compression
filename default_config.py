@@ -20,11 +20,13 @@ class Datasets(object):
     OPENIMAGES = 'openimages'
     CITYSCAPES = 'cityscapes'
     JETS = 'jetimages'
+    SEVIR = 'sevir'
 
 class DatasetPaths(object):
     OPENIMAGES = 'data/openimages'
     CITYSCAPES = ''
     JETS = ''
+    SEVIR = 'data/sevir/ir069'
 
 class directories(object):
     experiments = 'experiments'
@@ -42,8 +44,8 @@ class args(object):
     save_interval = 50000
     gpu = 0
     multigpu = True
-    dataset = Datasets.OPENIMAGES
-    dataset_path = DatasetPaths.OPENIMAGES
+    dataset = Datasets.SEVIR
+    dataset_path = DatasetPaths.SEVIR
     shuffle = True
 
     # GAN params
@@ -65,7 +67,7 @@ class args(object):
     
     # Shapes
     crop_size = 256
-    image_dims = (3,256,256)
+    image_dims = (1,192,192)
     latent_dims = (latent_channels,16,16)
     
     # Optimizer params

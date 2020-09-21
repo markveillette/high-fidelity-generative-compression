@@ -334,25 +334,35 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 from torch.utils.data import TensorDataset
 import h5py
 class Sevir(TensorDataset):
-    def __init__(self,root,key='ir069',shuffle=True,img_min=-8000,img_max=0):
+    def __init__(self,root,shuffle=True,mode='train',
+                 img_min=-8000,img_max=0,logger=logging.getLogger(__name__),
+                normalize=True):
         # Load all hdf5 files under root into memory (!)
-        if os.path.isdir(root):
-            files = glob.glob(os.path.join(root, '*.h5'))
+        if mode=='train':
+            files = [root+'/train.h5']
         else:
-            files=[root]
+            files = [root+'/test.h5']
         X=[]
         for f in files:
             print('Reading',f)
             with h5py.File(f,'r') as hf:
-                X.append(hf[key][:])
+                X.append(np.float32(hf['IMG'][:1000]))
         X=np.concatenate(X,axis=0)
         # unwrap time
         X=np.transpose(X,(0,3,1,2))
         X=np.reshape(X,(-1,1,X.shape[2],X.shape[3]))
         # Normalize
+        X[X<img_min]=img_min
         X = (X-img_min)/(img_max-img_min)
         self.ndim=X[0].shape
-        super().__init__(torch.Tensor(X),shuffle=shuffle)
+        self.image_dims = (1,X.shape[2],X.shape[3])
+        self.logger=logger
+        super().__init__(torch.Tensor(X))
+    
+    def __getitem__(self,idx):
+        bpp=16.0  # bpp..   assume uncompressed short..?
+        X=super().__getitem__(idx)
+        return X[0],bpp
 
     def __ndim__(self):
         return self.ndim
